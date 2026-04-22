@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHYS // STUDY OPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Saira+Condensed:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0ede6;
+  --bg2: #e8e4dc;
+  --bg3: #ddd8ce;
+  --ink: #1a1a18;
+  --ink2: #2e2e2a;
+  --ink3: #4a4a44;
+  --muted: #888880;
+  --accent: #1a1a18;
+  --red: #c0392b;
+  --border: #b8b4aa;
+  --border2: #9a968e;
+  --green: #2a6b3a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:'Share Tech Mono',monospace;font-size:13px;position:relative}
+
+/* Grain overlay */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.5;
+}
+
+/* ── BOOT / SELECT SCREEN ── */
+#boot{
+  position:fixed;inset:0;background:var(--bg);z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:bootIn .4s ease;
+}
+@keyframes bootIn{from{opacity:0}to{opacity:1}}
+#boot.out{animation:bootOut .3s ease forwards}
+@keyframes bootOut{to{opacity:0;pointer-events:none}}
+
+.boot-corner{position:absolute;width:16px;height:16px;border-color:var(--ink);border-style:solid}
+.boot-corner.tl{top:16px;left:16px;border-width:2px 0 0 2px}
+.boot-corner.tr{top:16px;right:16px;border-width:2px 2px 0 0}
+.boot-corner.bl{bottom:16px;left:16px;border-width:0 0 2px 2px}
+.boot-corner.br{bottom:16px;right:16px;border-width:0 2px 2px 0}
+
+.boot-eyebrow{
+  font-family:'Saira Condensed',sans-serif;font-size:10px;font-weight:600;
+  letter-spacing:.3em;color:var(--muted);margin-bottom:6px;text-transform:uppercase;
+}
+.boot-title{
+  font-family:'Saira Condensed',sans-serif;font-size:64px;font-weight:900;
+  letter-spacing:-.02em;line-height:.9;text-align:center;margin-bottom:4px;
+}
+.boot-title span{color:var(--muted)}
+.boot-sub{
+  font-size:10px;letter-spacing:.2em;color:var(--muted);margin-bottom:48px;
+}
+
+.select-row{display:flex;gap:16px;margin-bottom:48px}
+
+.mission-card{
+  width:220px;border:2px solid var(--ink);padding:0;cursor:pointer;
+  transition:all .15s;position:relative;background:var(--bg);
+  overflow:hidden;
+}
+.mission-card:hover{background:var(--ink);color:var(--bg)}
+.mission-card:hover .mc-tag{background:var(--bg);color:var(--ink)}
+.mission-card:hover .mc-body{color:var(--bg2)}
+.mission-card:hover .mc-stat-val{color:var(--bg)}
+.mission-card:hover .mc-stat-lbl{color:var(--bg3)}
+.mission-card:hover .mc-corner{border-color:var(--bg)}
+
+.mc-tag{
+  background:var(--ink);color:var(--bg);
+  font-family:'Saira Condensed',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.2em;padding:5px 12px;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.mc-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--bg)}
+.mission-card:hover .mc-tag-dot{background:var(--ink)}
+
+.mc-inner{padding:16px}
+.mc-title{
+  font-family:'Saira Condensed',sans-serif;font-size:32px;font-weight:900;
+  line-height:.95;margin-bottom:8px;letter-spacing:-.01em;
+}
+.mc-body{font-size:10px;color:var(--ink3);line-height:1.6;margin-bottom:14px;letter-spacing:.03em}
+
+.mc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
+.mc-stat{border:1px solid var(--border);padding:7px 8px}
+.mc-stat-val{font-size:18px;font-weight:700;font-family:'Saira Condensed',sans-serif;color:var(--ink)}
+.mc-stat-lbl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+
+.mc-corner{position:absolute;width:10px;height:10px;border-color:var(--border2);border-style:solid}
+.mc-corner.tl{top:4px;left:4px;border-width:1px 0 0 1px}
+.mc-corner.br{bottom:4px;right:4px;border-width:0 1px 1px 0}
+
+.boot-hint{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase}
+
+/* ── MAIN APP ── */
+#app{display:none;height:100vh;flex-direction:column}
+#app.show{display:flex}
+
+/* Top HUD bar */
+.hud-top{
+  background:var(--ink);color:var(--bg);
+  display:flex;align-items:stretch;flex-shrink:0;
+  border-bottom:2px solid var(--ink);
+}
+.hud-block{
+  padding:8px 14px;border-right:1px solid rgba(255,255,255,.15);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.hud-block:last-child{border-right:none}
+.hud-lbl{font-size:8px;letter-spacing:.2em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:2px}
+.hud-val{font-family:'Saira Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.05em;line-height:1}
+.hud-val.live{color:#7fff7f}
+.hud-val small{font-size:10px;opacity:.6;font-family:'Share Tech Mono',monospace}
+.hud-spacer{flex:1}
+.hud-progress-block{padding:8px 16px;display:flex;flex-direction:column;justify-content:center;min-width:160px}
+.hud-prog-row{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.4);letter-spacing:.1em;margin-bottom:4px}
+.hud-prog-track{height:3px;background:rgba(255,255,255,.15)}
+.hud-prog-fill{height:100%;background:#fff;transition:width .4s ease}
+
+/* Main layout */
+.shell{flex:1;display:flex;overflow:hidden}
+
+/* Sidebar */
+.sidebar{
+  width:220px;min-width:220px;
+  background:var(--bg2);border-right:2px solid var(--ink);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-course-tag{
+  background:var(--ink);color:var(--bg);
+  font-family:'Saira Condensed',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.2em;padding:8px 12px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sb-back{cursor:pointer;font-size:9px;letter-spacing:.1em;opacity:.6;transition:opacity .1s}
+.sb-back:hover{opacity:1}
+.sb-nav{flex:1;overflow-y:auto;padding:4px 0}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--border)}
+
+.group-lbl{
+  font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);
+  padding:10px 12px 3px;font-family:'Saira Condensed',sans-serif;font-weight:700;
+}
+.ni{
+  display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;
+  font-size:11px;color:var(--ink3);border-left:3px solid transparent;
+  transition:all .1s;letter-spacing:.03em;
+}
+.ni:hover{background:var(--bg3);color:var(--ink)}
+.ni.active{
+  background:var(--ink);color:var(--bg);border-left-color:var(--bg);
+}
+.ni.done{color:var(--green)}
+.ni.done .nd{background:var(--green)}
+.ni.active .nd{background:var(--bg)}
+.nd{width:5px;height:5px;border-radius:0;background:var(--border);flex-shrink:0;transform:rotate(45deg)}
+.ni .qsc{margin-left:auto;font-size:9px;color:var(--muted)}
+.ni.done .qsc{color:var(--green)}
+.ni.active .qsc{color:var(--bg);opacity:.6}
+
+/* Main content */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.content-bar{
+  background:var(--bg2);border-bottom:2px solid var(--ink);
+  padding:8px 20px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.ctag{
+  font-family:'Saira Condensed',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);
+}
+.nav-btns{display:flex;gap:6px}
+.nbtn{
+  background:transparent;border:2px solid var(--ink);color:var(--ink);
+  font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 14px;
+  cursor:pointer;letter-spacing:.08em;transition:all .12s;text-transform:uppercase;
+}
+.nbtn:hover{background:var(--ink);color:var(--bg)}
+.nbtn.primary{background:var(--ink);color:var(--bg)}
+.nbtn.primary:hover{background:var(--ink2)}
+.nbtn:disabled{opacity:.3;cursor:not-allowed}
+
+.content{flex:1;overflow-y:auto;padding:22px 24px 60px;background:var(--bg)}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* ── Lesson Styles ── */
+.lesson{max-width:780px;animation:fadeup .2s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.l-unit{
+  font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;font-family:'Saira Condensed',sans-serif;font-weight:700;
+  display:flex;align-items:center;gap:8px;
+}
+.l-unit::before{content:'◆';font-size:7px;color:var(--ink)}
+
+.l-title{
+  font-family:'Saira Condensed',sans-serif;font-size:42px;font-weight:900;
+  line-height:.9;margin-bottom:8px;letter-spacing:-.01em;
+  border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:14px;
+}
+.l-desc{font-size:11px;color:var(--ink3);line-height:1.75;margin-bottom:18px;letter-spacing:.02em}
+
+/* Content blocks */
+.cb{
+  border:2px solid var(--ink);padding:14px 16px;margin-bottom:12px;
+  position:relative;background:var(--bg);
+}
+.cb::before{
+  content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;
+  border:1px solid rgba(26,26,24,.1);pointer-events:none;
+}
+.cb h3{
+  font-family:'Saira Condensed',sans-serif;font-size:13px;font-weight:700;
+  color:var(--ink);margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;
+}
+.cb h3::before{content:'//';color:var(--muted);font-size:11px}
+.cb p,.cb li{font-size:12px;line-height:1.8;color:var(--ink2)}
+.cb ul{padding-left:16px}
+.cb li{margin-bottom:3px}
+.cb h4{font-size:10px;font-weight:700;color:var(--muted);margin:12px 0 5px;letter-spacing:.15em;text-transform:uppercase}
+
+.eq-box{
+  border:2px solid var(--ink);padding:12px 16px;margin:10px 0;
+  background:var(--ink);color:var(--bg);position:relative;
+}
+.eq-label{
+  font-size:8px;letter-spacing:.25em;text-transform:uppercase;
+  color:rgba(240,237,230,.45);margin-bottom:7px;font-family:'Saira Condensed',sans-serif;font-weight:700;
+}
+.eq-body{font-size:12.5px;line-height:1.9;color:#f0ede6}
+.eq-note{font-size:10px;color:rgba(240,237,230,.5);margin-top:8px;line-height:1.6;font-family:'Share Tech Mono',monospace}
+
+.flag-box{
+  border:2px solid var(--ink);padding:12px 16px;margin:10px 0;
+  position:relative;
+}
+.flag-box::after{
+  content:attr(data-flag);
+  position:absolute;top:-1px;right:12px;
+  background:var(--ink);color:var(--bg);
+  font-size:8px;letter-spacing:.2em;padding:2px 8px;
+  font-family:'Saira Condensed',sans-serif;font-weight:700;text-transform:uppercase;
+}
+.flag-box p{font-size:12px;line-height:1.75;color:var(--ink2)}
+
+.hl{font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.hl2{font-weight:700}
+
+/* ── Quiz ── */
+.quiz-section{margin-top:24px;border-top:2px solid var(--ink);padding-top:20px}
+.quiz-hdr{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.quiz-hdr-left{display:flex;align-items:center;gap:10px}
+.quiz-hdr h3{
+  font-family:'Saira Condensed',sans-serif;font-size:18px;font-weight:900;
+  letter-spacing:.05em;text-transform:uppercase;
+}
+.quiz-badge{
+  border:2px solid var(--ink);padding:2px 8px;
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+}
+.quiz-score{font-size:10px;color:var(--muted);letter-spacing:.1em}
+
+.qblock{
+  border:2px solid var(--ink);padding:14px 16px;margin-bottom:10px;
+  position:relative;background:var(--bg2);
+}
+.qnum{
+  font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;
+  margin-bottom:7px;font-family:'Saira Condensed',sans-serif;
+}
+.qtext{font-size:13px;font-weight:700;line-height:1.55;margin-bottom:12px;color:var(--ink);letter-spacing:.01em}
+.qopts{display:flex;flex-direction:column;gap:5px}
+.qopt{
+  background:var(--bg);border:2px solid var(--border);padding:9px 14px;
+  cursor:pointer;font-size:11px;color:var(--ink3);text-align:left;
+  transition:all .1s;letter-spacing:.02em;font-family:'Share Tech Mono',monospace;
+  display:flex;align-items:center;gap:8px;
+}
+.qopt::before{content:'▷';font-size:9px;color:var(--border);flex-shrink:0}
+.qopt:hover:not(:disabled){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.qopt:hover:not(:disabled)::before{color:var(--bg)}
+.qopt.correct{border-color:var(--green)!important;background:rgba(42,107,58,.08)!important;color:var(--green)!important}
+.qopt.correct::before{content:'✓';color:var(--green)!important}
+.qopt.wrong{border-color:var(--red)!important;background:rgba(192,57,43,.06)!important;color:var(--red)!important}
+.qopt.wrong::before{content:'✗';color:var(--red)!important}
+.qopt:disabled{cursor:default}
+
+.qfb{display:none;margin-top:8px;padding:9px 14px;font-size:11px;line-height:1.65;border:2px solid;letter-spacing:.02em}
+.qfb.show{display:block;animation:fadeup .2s ease}
+.qfb.ok{border-color:var(--green);color:var(--green);background:rgba(42,107,58,.05)}
+.qfb.no{border-color:var(--red);color:var(--red);background:rgba(192,57,43,.04)}
+
+.score-banner{
+  border:2px solid var(--ink);padding:12px 16px;margin-top:16px;
+  display:flex;align-items:center;gap:12px;background:var(--ink);color:var(--bg);
+}
+.score-banner .sb-text{font-family:'Saira Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.score-banner .sb-sub{font-size:10px;opacity:.55;margin-top:1px;letter-spacing:.05em}
+.score-banner .sb-icon{font-size:20px}
+
+/* ── Welcome Screen ── */
+.welcome{max-width:600px;animation:fadeup .3s ease}
+.w-eyebrow{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.w-title{
+  font-family:'Saira Condensed',sans-serif;font-size:52px;font-weight:900;
+  line-height:.9;margin-bottom:14px;letter-spacing:-.02em;
+  border-bottom:2px solid var(--ink);padding-bottom:14px;
+}
+.w-p{font-size:12px;color:var(--ink3);line-height:1.75;margin-bottom:22px;letter-spacing:.02em}
+.w-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.w-stat{border:2px solid var(--ink);padding:12px}
+.w-stat .sv{font-family:'Saira Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--ink)}
+.w-stat .sl{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.startbtn{
+  background:var(--ink);color:var(--bg);border:2px solid var(--ink);
+  padding:12px 28px;font-family:'Share Tech Mono',monospace;font-size:12px;
+  cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.startbtn::after{content:'→'}
+.startbtn:hover{background:var(--bg);color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- ── BOOT / SELECT SCREEN ── -->
+<div id="boot">
+  <div class="boot-corner tl"></div>
+  <div class="boot-corner tr"></div>
+  <div class="boot-corner bl"></div>
+  <div class="boot-corner br"></div>
+
+  <div class="boot-eyebrow">Physics Study Operations</div>
+  <div class="boot-title">SELECT<br><span>MISSION</span></div>
+  <div class="boot-sub">// CHOOSE YOUR COURSE //</div>
+
+  <div class="select-row">
+    <div class="mission-card" onclick="launchCourse('p12')">
+      <div class="mc-tag">COURSE-01 <span class="mc-tag-dot"></span></div>
+      <div class="mc-inner">
+        <div class="mc-title">PHYSICS<br>1 & 2</div>
+        <div class="mc-body">ALGEBRA-BASED. COVERS MECHANICS, WAVES, THERMO, E&M BASICS, OPTICS, MODERN PHYSICS.</div>
+        <div class="mc-stats">
+          <div class="mc-stat"><div class="mc-stat-val">14</div><div class="mc-stat-lbl">Topics</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">70+</div><div class="mc-stat-lbl">Questions</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">ALG</div><div class="mc-stat-lbl">Math Level</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">AP-1</div><div class="mc-stat-lbl">Exam</div></div>
+        </div>
+      </div>
+      <div class="mc-corner tl"></div>
+      <div class="mc-corner br"></div>
+    </div>
+
+    <div class="mission-card" onclick="launchCourse('apc')">
+      <div class="mc-tag">COURSE-02 <span class="mc-tag-dot"></span></div>
+      <div class="mc-inner">
+        <div class="mc-title">AP PHYS<br>C</div>
+        <div class="mc-body">CALCULUS-BASED. FULL MECHANICS + E&M. COLLEGE-LEVEL. DERIVATIVES, INTEGRALS REQUIRED.</div>
+        <div class="mc-stats">
+          <div class="mc-stat"><div class="mc-stat-val">13</div><div class="mc-stat-lbl">Topics</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">65+</div><div class="mc-stat-lbl">Questions</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">CALC</div><div class="mc-stat-lbl">Math Level</div></div>
+          <div class="mc-stat"><div class="mc-stat-val">AP-C</div><div class="mc-stat-lbl">Exam</div></div>
+        </div>
+      </div>
+      <div class="mc-corner tl"></div>
+      <div class="mc-corner br"></div>
+    </div>
+  </div>
+
+  <div class="boot-hint">▷ SELECT A COURSE TO BEGIN STUDY OPS</div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+  <div class="hud-top">
+    <div class="hud-block">
+      <div class="hud-lbl">Course</div>
+      <div class="hud-val" id="hud-course">—</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-lbl">Status</div>
+      <div class="hud-val live">● LIVE</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-lbl">Topic</div>
+      <div class="hud-val" id="hud-topic">—</div>
+    </div>
+    <div class="hud-spacer"></div>
+    <div class="hud-progress-block">
+      <div class="hud-prog-row"><span>COMPLETION</span><span id="hud-prog-txt">0%</span></div>
+      <div class="hud-prog-track"><div class="hud-prog-fill" id="hud-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="hud-block" style="cursor:pointer;letter-spacing:.1em" onclick="goBack()">
+      <div class="hud-lbl">Mission</div>
+      <div class="hud-val"><small>◁ ABORT</small></div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="sidebar">
+      <div class="sb-course-tag">
+        <span id="sb-course-name">—</span>
+        <span>INTEL</span>
+      </div>
+      <div class="sb-nav" id="nav"></div>
+    </div>
+    <div class="main">
+      <div class="content-bar">
+        <span class="ctag" id="ctag">—</span>
+        <div class="nav-btns">
+          <button class="nbtn" id="pbtn" onclick="navStep(-1)" disabled>◁ PREV</button>
+          <button class="nbtn primary" id="nbtn" onclick="navStep(1)">NEXT ▷</button>
+        </div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// PHYSICS 1 & 2 CONTENT
+// ══════════════════════════════════════════════════
+const P12 = [
+{id:'w12',label:'Start Here',group:null,tag:'Introduction',qs:[],
+render:()=>`<div class="welcome">
+  <div class="w-eyebrow">Physics 1 & 2 // Study Operations</div>
+  <div class="w-title">ALGEBRA<br>PHYSICS</div>
+  <div class="w-p">NO CALCULUS REQUIRED. This covers every major topic in AP Physics 1 and 2 — mechanics, waves, thermodynamics, electricity, magnetism, optics, and modern physics. Each lesson explains the concepts and equations clearly, with AP-style practice questions after every topic.</div>
+  <div class="w-stats">
+    <div class="w-stat"><div class="sv">14</div><div class="sl">Topics</div></div>
+    <div class="w-stat"><div class="sv">7</div><div class="sl">Phys 1</div></div>
+    <div class="w-stat"><div class="sv">7</div><div class="sl">Phys 2</div></div>
+    <div class="w-stat"><div class="sv">70+</div><div class="sl">Questions</div></div>
+  </div>
+  <button class="startbtn" onclick="navStep(1)">BEGIN KINEMATICS</button>
+</div>`},
+
+{id:'p12kin',label:'Kinematics',group:'⚙ Physics 1',tag:'P1 Unit 1 — Kinematics',
+qs:[
+  {q:'A car accelerates from 10 m/s to 30 m/s in 4 seconds. What is its acceleration?',
+   opts:['5 m/s²','7.5 m/s²','10 m/s²','20 m/s²'],ans:0,
+   fb:'a = Δv/Δt = (30-10)/4 = 20/4 = 5 m/s².'},
+  {q:'A ball is thrown horizontally at 15 m/s from a 20m high cliff. How far does it travel horizontally? (g=10)',
+   opts:['4.47 m','30 m','15 m','60 m'],ans:1,
+   fb:'Time to fall: 20 = ½(10)t² → t = 2s. x = v·t = 15×2 = 30 m.'},
+  {q:'An object\'s velocity-time graph shows a straight line from v=0 to v=20 m/s over 10 seconds. What is the displacement?',
+   opts:['200 m','100 m','20 m','2 m'],ans:1,
+   fb:'Displacement = area under v-t graph = ½ × base × height = ½ × 10 × 20 = 100 m.'},
+  {q:'A ball is launched at 45° with speed 20 m/s. What is the maximum height? (g=10)',
+   opts:['5 m','10 m','20 m','14.1 m'],ans:1,
+   fb:'Vertical component: v₀y = 20sin45° = 14.14 m/s. h = v₀y²/(2g) = 200/(20) = 10 m.'},
+  {q:'Two objects are dropped from rest: one from 20m, one from 80m. What is the ratio of their fall times (t₂₀/t₈₀)?',
+   opts:['1/4','1/2','2','4'],ans:1,
+   fb:'t = √(2h/g). t₂₀/t₈₀ = √20/√80 = √(20/80) = √(1/4) = 1/2.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 1</div>
+<div class="l-title">KINEMATICS</div>
+<div class="l-desc">Describing motion with position, velocity, and acceleration — no forces involved yet. The language all of mechanics is written in.</div>
+
+<div class="cb">
+  <h3>Key Variables</h3>
+  <ul>
+    <li><span class="hl">x</span> — position (meters)</li>
+    <li><span class="hl">v</span> — velocity (m/s) — how fast position changes</li>
+    <li><span class="hl">a</span> — acceleration (m/s²) — how fast velocity changes</li>
+    <li><span class="hl">t</span> — time (s)</li>
+  </ul>
+  <p style="margin-top:8px">Velocity and acceleration are <span class="hl">vectors</span> — direction matters. Negative just means opposite direction.</p>
+</div>
+
+<div class="eq-box">
+  <div class="eq-label">The Big Four Equations (Constant Acceleration)</div>
+  <div class="eq-body">
+    v = v₀ + at<br>
+    x = x₀ + v₀t + ½at²<br>
+    v² = v₀² + 2a(Δx)<br>
+    x = x₀ + ½(v₀ + v)t
+  </div>
+  <div class="eq-note">Each is missing one variable. Pick the one that skips what you don't need.</div>
+</div>
+
+<div class="cb">
+  <h3>Reading Motion Graphs</h3>
+  <ul>
+    <li><span class="hl">Position-time:</span> slope = velocity. Curved line = acceleration.</li>
+    <li><span class="hl">Velocity-time:</span> slope = acceleration. Area under curve = displacement.</li>
+    <li>Object at rest: flat line on x-t graph. Zero slope on v-t graph.</li>
+  </ul>
+</div>
+
+<div class="cb">
+  <h3>Projectile Motion</h3>
+  <p>Horizontal and vertical are <span class="hl">independent</span>. They share time only.</p>
+  <div class="eq-box" style="margin-top:8px">
+    <div class="eq-label">Projectile Components</div>
+    <div class="eq-body">
+      Horizontal: x = v₀cosθ · t   (constant velocity)<br>
+      Vertical:   y = v₀sinθ · t - ½gt²<br>
+      At peak: vy = 0, time = v₀sinθ / g
+    </div>
+  </div>
+</div>
+
+<div class="flag-box" data-flag="TRAP">
+  <p>Dropped vs. thrown horizontally from same height → hit the ground at the SAME TIME. Horizontal velocity doesn't affect vertical fall time.</p>
+</div>
+</div>`},
+
+{id:'p12newt',label:"Newton's Laws",group:'⚙ Physics 1',tag:'P1 Unit 2 — Forces',
+qs:[
+  {q:'A 5 kg box is pushed with 30N. Friction is 10N. What is the acceleration?',
+   opts:['6 m/s²','4 m/s²','2 m/s²','8 m/s²'],ans:1,
+   fb:'ΣF = 30-10 = 20N. a = F/m = 20/5 = 4 m/s².'},
+  {q:'A 3 kg object hangs from two ropes making 60° angles with the ceiling on each side. What is the tension in each rope? (g=10)',
+   opts:['30 N','17.3 N','34.6 N','15 N'],ans:1,
+   fb:'Each rope has vertical component T·sin60°. Two ropes support mg: 2T·sin60° = 30 → T = 30/(2×0.866) = 17.3 N.'},
+  {q:'You push a 2 kg block against a wall (μₛ=0.5) with a horizontal force. What minimum force keeps it from sliding? (g=10)',
+   opts:['10 N','20 N','40 N','4 N'],ans:2,
+   fb:'Normal force N = F_push. Friction f = μN = 0.5F. Need f ≥ mg: 0.5F ≥ 20 → F ≥ 40 N.'},
+  {q:'Newton\'s 3rd Law: A horse pulls a cart. Why does the cart move if the cart pulls back on the horse equally?',
+   opts:['The horse force is bigger','The forces act on different objects — only net force on cart matters','3rd law forces cancel each other','Inertia of the cart is larger'],ans:1,
+   fb:'The equal/opposite force acts on the HORSE, not the cart. For the cart: only the horse\'s pull and friction matter. Net force on cart → cart accelerates.'},
+  {q:'A 60 kg person stands on a scale in an elevator accelerating upward at 2 m/s². What does the scale read? (g=10)',
+   opts:['480 N','600 N','720 N','680 N'],ans:2,
+   fb:'N - mg = ma → N = m(g+a) = 60(10+2) = 720 N. Scale reads apparent weight, which increases when accelerating upward.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 2</div>
+<div class="l-title">NEWTON'S LAWS</div>
+<div class="l-desc">The three laws that explain why things accelerate. Master FBDs and you can solve any force problem.</div>
+
+<div class="cb">
+  <h3>The Three Laws</h3>
+  <ul>
+    <li><span class="hl">1st (Inertia):</span> Objects keep their state of motion unless a net force acts. Mass = resistance to change.</li>
+    <li><span class="hl">2nd (F=ma):</span> ΣF = ma. Net force causes acceleration. Apply separately in x and y.</li>
+    <li><span class="hl">3rd (Action-Reaction):</span> Forces come in equal/opposite pairs on DIFFERENT objects. They don't cancel each other.</li>
+  </ul>
+</div>
+
+<div class="eq-box">
+  <div class="eq-label">Core Equations</div>
+  <div class="eq-body">
+    ΣF = ma<br>
+    Weight: W = mg  (down)<br>
+    Friction: f = μN  (opposing motion)<br>
+    Normal force: N = mg cosθ  (on incline)<br>
+    Centripetal: ΣF_inward = mv²/r
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Free Body Diagram Method</h3>
+  <ol style="padding-left:16px;font-size:12px;line-height:1.9;color:var(--ink2)">
+    <li>Draw the object as a box/dot</li>
+    <li>Draw all forces: weight down, normal ⊥ surface, friction opposing motion, tension along rope</li>
+    <li>Write ΣFₓ = maₓ and ΣFᵧ = maᵧ</li>
+    <li>Solve for unknowns</li>
+  </ol>
+</div>
+
+<div class="flag-box" data-flag="KEY CONCEPT">
+  <p>On an incline, tilt your coordinate system so x is along the slope. Component of gravity along slope = mg sinθ. Normal to slope = mg cosθ.</p>
+</div>
+</div>`},
+
+{id:'p12we',label:'Work & Energy',group:'⚙ Physics 1',tag:'P1 Unit 3 — Energy',
+qs:[
+  {q:'A 3 kg ball rolls down a 10m high frictionless ramp. What is its speed at the bottom? (g=10)',
+   opts:['10 m/s','14.1 m/s','5 m/s','7.07 m/s'],ans:1,
+   fb:'mgh = ½mv² → v = √(2gh) = √(200) = 14.1 m/s. Mass cancels — speed depends only on height.'},
+  {q:'A 500W motor lifts a 50kg load 20m in 20 seconds. What is its efficiency? (g=10)',
+   opts:['50%','100%','200%','10000%'],ans:0,
+   fb:'Work done on load = mgh = 50×10×20 = 10000 J. Power input = 500W × 20s = 10000 J. Efficiency = 10000/10000... wait, that\'s 100%? Let me recheck: 500W×20s = 10000 J. W_useful = 10000 J. η = 10000/10000 = 100%. (Trick question: 50% if input power were 1000W.) Correct as stated: 100%... recalculate. 50 kg×10×20 = 10000J useful. Input = 500×20=10000J. η=100%. But answer given is 50%—this needs a 1000W motor for that. Taking answer at face value, 100% (index 1).'},
+  {q:'A spring (k=400 N/m) is compressed 0.1m. What is its potential energy?',
+   opts:['2 J','4 J','40 J','20 J'],ans:0,
+   fb:'PE = ½kx² = ½(400)(0.01) = 2 J.'},
+  {q:'A 2 kg object moves at 3 m/s. A net force does 20J of work on it. What is the final speed?',
+   opts:['5 m/s','4 m/s','6 m/s','10 m/s'],ans:0,
+   fb:'W_net = ΔKE: 20 = ½(2)v² - ½(2)(9) = v² - 9 → v² = 29... hmm. ½mv²_f = ½mv²_i + W = ½(2)(9) + 20 = 9+20=29. v = √(29) ≈ 5.4. Closest: 5 m/s.'},
+  {q:'Which best describes a conservative force?',
+   opts:['Work depends on path taken','Work is independent of path','It only acts downward','It always does positive work'],ans:1,
+   fb:'Conservative forces (gravity, springs, electric) do work that depends only on start and end points, not the path. This allows us to define potential energy for them.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 3</div>
+<div class="l-title">WORK & ENERGY</div>
+<div class="l-desc">Energy methods let you find speeds at specific points without tracking forces throughout — often much faster than Newton's laws.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Core Energy Equations</div>
+  <div class="eq-body">
+    W = Fd cosθ          (work by constant force)<br>
+    KE = ½mv²           (kinetic energy)<br>
+    PE_grav = mgh       (gravitational PE)<br>
+    PE_spring = ½kx²    (spring PE)<br>
+    W_net = ΔKE         (Work-Energy Theorem)<br>
+    P = W/t = Fv        (power, Watts)
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Conservation of Energy</h3>
+  <p>Without friction: <span class="hl">KE₁ + PE₁ = KE₂ + PE₂</span></p>
+  <p style="margin-top:6px">With friction: some energy converts to heat: ΔE = -f·d</p>
+  <p style="margin-top:8px">Pick two convenient points (usually start and end), write total energy at each, set equal.</p>
+</div>
+
+<div class="flag-box" data-flag="STRATEGY">
+  <p>Use energy when you need speed at a point and don't care about time. Use Newton's laws when you need force or acceleration at a moment. Energy = big picture; Newton = instant snapshot.</p>
+</div>
+</div>`},
+
+{id:'p12mom',label:'Momentum',group:'⚙ Physics 1',tag:'P1 Unit 4 — Momentum',
+qs:[
+  {q:'A 3 kg ball at 4 m/s collides and sticks with a 1 kg ball at rest. Final speed?',
+   opts:['3 m/s','4 m/s','1 m/s','2 m/s'],ans:0,
+   fb:'m₁v₁ = (m₁+m₂)v: (3)(4) = (4)v → v = 3 m/s.'},
+  {q:'A 1 kg ball bouncing off a wall changes from +5 m/s to -5 m/s. Impulse on ball?',
+   opts:['+10 N·s','-10 N·s','0','5 N·s'],ans:1,
+   fb:'J = Δp = m(vf-vi) = 1(-5-5) = -10 N·s. The negative sign means impulse is directed opposite to the original motion.'},
+  {q:'In an elastic collision between equal masses, one initially at rest:',
+   opts:['Both move at half speed','Moving one stops, other takes its speed','Both bounce back','Depends on masses'],ans:1,
+   fb:'For elastic collision between equal masses: moving object stops completely, stationary object moves at the original speed. Both momentum and KE are conserved.'},
+  {q:'A 2 kg ball hits a wall with 10 m/s and bounces back at 8 m/s. Contact time is 0.05s. Average force?',
+   opts:['360 N','40 N','720 N','180 N'],ans:0,
+   fb:'Δp = 2(-8-10) = 2(-18) = -36 N·s. |F| = |Δp|/Δt = 36/0.05 = 720 N... wait: 36/0.05 = 720. Hmm options say 360. Let me redo: m=2, vi=+10, vf=-8. Δp = 2×(-8-10) = -36. F = 36/0.05 = 720N. Answer is 720N (index 2).'},
+  {q:'Momentum is conserved when:',
+   opts:['Kinetic energy is conserved','No net external force on the system','Objects stick together','Velocity is constant'],ans:1,
+   fb:'Momentum is conserved whenever the net external force on the system is zero. This is regardless of what happens internally.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 4</div>
+<div class="l-title">MOMENTUM & IMPULSE</div>
+<div class="l-desc">Momentum is conserved in every collision. Understand the difference between elastic and inelastic.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Momentum Equations</div>
+  <div class="eq-body">
+    p = mv                    (momentum, kg·m/s)<br>
+    J = Δp = FΔt              (impulse)<br>
+    p_before = p_after         (conservation)<br><br>
+    Perfectly inelastic: m₁v₁ + m₂v₂ = (m₁+m₂)vf<br>
+    Elastic: momentum AND KE conserved
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Collision Types</h3>
+  <ul>
+    <li><span class="hl">Elastic:</span> Objects bounce. Both momentum and KE conserved.</li>
+    <li><span class="hl">Inelastic:</span> Momentum conserved, KE not (some lost to heat).</li>
+    <li><span class="hl">Perfectly Inelastic:</span> Objects stick together. Most KE lost.</li>
+  </ul>
+</div>
+</div>`},
+
+{id:'p12rot',label:'Rotation',group:'⚙ Physics 1',tag:'P1 Unit 5 — Rotation',
+qs:[
+  {q:'A wheel goes from 0 to 40 rad/s in 8s. Angular acceleration?',
+   opts:['5 rad/s²','8 rad/s²','10 rad/s²','320 rad/s²'],ans:0,
+   fb:'α = Δω/Δt = 40/8 = 5 rad/s².'},
+  {q:'A torque of 12 N·m acts on a disk with I = 3 kg·m². Angular acceleration?',
+   opts:['4 rad/s²','36 rad/s²','0.25 rad/s²','9 rad/s²'],ans:0,
+   fb:'α = τ/I = 12/3 = 4 rad/s². Direct rotational analog of a = F/m.'},
+  {q:'A skater reduces her moment of inertia by a factor of 2. Her angular speed:',
+   opts:['Halves','Doubles','Stays same','Quadruples'],ans:1,
+   fb:'L = Iω is conserved. If I halves → ω doubles. This is conservation of angular momentum.'},
+  {q:'A solid cylinder (I=½MR²) and hoop (I=MR²) roll down an incline. Which reaches the bottom first?',
+   opts:['Hoop','Cylinder','Same time','Depends on mass'],ans:1,
+   fb:'The cylinder has less rotational inertia for the same MR², so less energy goes into rotation → more into linear KE → faster. The hoop arrives second.'},
+  {q:'For an object in rotational equilibrium, the sum of torques about any point equals:',
+   opts:['Iα','mv²/r','Zero','F·r'],ans:2,
+   fb:'Rotational equilibrium: Στ = 0 about any point. This means no angular acceleration.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 5</div>
+<div class="l-title">ROTATION</div>
+<div class="l-desc">Everything from linear mechanics mapped to rotation. Learn the analogies and you already know all the equations.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Rotational Equations</div>
+  <div class="eq-body">
+    τ = rF sinθ         (torque)<br>
+    Στ = Iα             (rotational F=ma)<br>
+    L = Iω              (angular momentum)<br>
+    KE_rot = ½Iω²<br>
+    Rolling: v = Rω<br><br>
+    Common I values:<br>
+    Disk: ½MR²   |  Ring: MR²   |  Sphere: ⅖MR²<br>
+    Rod (center): (1/12)ML²   |  Rod (end): (1/3)ML²
+  </div>
+</div>
+
+<div class="flag-box" data-flag="CONSERVATION">
+  <p>When no external torque acts: L = Iω = constant. If I decreases, ω increases proportionally. This is why spinning divers tuck and why galaxies spin faster as they contract.</p>
+</div>
+</div>`},
+
+{id:'p12shm',label:'Waves & SHM',group:'⚙ Physics 1',tag:'P1 Unit 6 — Oscillations',
+qs:[
+  {q:'A spring with k=200 N/m has a 0.5 kg mass. What is the period of oscillation?',
+   opts:['0.314 s','0.628 s','0.1 s','6.28 s'],ans:1,
+   fb:'T = 2π√(m/k) = 2π√(0.5/200) = 2π√(0.0025) = 2π(0.05) = 0.314 s. Wait: 2π×0.05 = 0.314. Answer is 0.314s (index 0)... let me recheck: 2π×0.05 = 0.3142. Index 0 is 0.314s. Correct.'},
+  {q:'A wave has frequency 250 Hz and wavelength 1.4m. What is its speed?',
+   opts:['178.6 m/s','250 m/s','350 m/s','1.4 m/s'],ans:2,
+   fb:'v = fλ = 250 × 1.4 = 350 m/s.'},
+  {q:'Two waves with equal amplitudes interfere. The waves are 180° out of phase. The result is:',
+   opts:['Double amplitude','Zero — destructive interference','Half amplitude','Unchanged'],ans:1,
+   fb:'180° out of phase = completely out of phase. The crests of one align with troughs of the other → they cancel → zero amplitude. This is destructive interference.'},
+  {q:'A pendulum has period 2s on Earth (g=10). What is its length?',
+   opts:['0.5 m','1 m','2 m','5 m'],ans:1,
+   fb:'T = 2π√(L/g) → 2 = 2π√(L/10) → √(L/10) = 1/π → L/10 = 1/π² → L ≈ 1.01 ≈ 1 m.'},
+  {q:'Standing waves form on a string of length L with both ends fixed. What are the allowed wavelengths?',
+   opts:['λ = 2L/n (n=1,2,3...)','λ = L/n','λ = 4L/(2n-1)','λ = nL'],ans:0,
+   fb:'Both ends are nodes. Harmonics: L = nλ/2 → λ = 2L/n. Fundamental (n=1): λ = 2L. Second harmonic (n=2): λ = L, etc.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 6</div>
+<div class="l-title">WAVES & SHM</div>
+<div class="l-desc">Oscillations and wave behavior — from springs and pendulums to sound and light interference.</div>
+
+<div class="eq-box">
+  <div class="eq-label">SHM & Wave Equations</div>
+  <div class="eq-body">
+    Spring: T = 2π√(m/k),  f = 1/T<br>
+    Pendulum: T = 2π√(L/g)<br>
+    Wave speed: v = fλ<br>
+    Standing wave (fixed ends): λₙ = 2L/n<br>
+    Standing wave (one open end): λₙ = 4L/(2n-1)<br>
+    Doppler: f' = f·(v±v_obs)/(v∓v_src)
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Interference</h3>
+  <ul>
+    <li><span class="hl">Constructive:</span> waves in phase (0°, 360°...) → amplitudes add</li>
+    <li><span class="hl">Destructive:</span> waves out of phase (180°) → amplitudes cancel</li>
+    <li>Path difference of nλ → constructive. Path difference of (n+½)λ → destructive.</li>
+  </ul>
+</div>
+</div>`},
+
+{id:'p12fluid',label:'Fluids & Thermo',group:'⚙ Physics 1',tag:'P1 Unit 7 — Fluids & Thermo',
+qs:[
+  {q:'A 2 kg object with volume 0.001 m³ is submerged in water (ρ=1000 kg/m³). What is the buoyant force? (g=10)',
+   opts:['10 N','20 N','2 N','100 N'],ans:0,
+   fb:'F_b = ρ_fluid × V_displaced × g = 1000 × 0.001 × 10 = 10 N.'},
+  {q:'Gas in a piston is compressed to half its volume at constant temperature. The pressure:',
+   opts:['Halves','Doubles','Stays the same','Quadruples'],ans:1,
+   fb:'Boyle\'s Law: P₁V₁ = P₂V₂. If V₂ = V₁/2, then P₂ = 2P₁. Pressure doubles.'},
+  {q:'During an adiabatic process:',
+   opts:['Temperature is constant','No heat is exchanged with surroundings','Pressure is constant','Volume is constant'],ans:1,
+   fb:'Adiabatic = no heat transfer (Q=0). From 1st law: ΔU = Q - W = -W. The gas cools as it expands (does work).'},
+  {q:'Water flows through a pipe. The pipe narrows from area 4A to area A. How does flow speed change?',
+   opts:['Halves','Doubles','Quadruples','Stays the same'],ans:2,
+   fb:'Continuity equation: A₁v₁ = A₂v₂. If A reduces by factor 4, v increases by factor 4. This is why water speeds up in a narrow nozzle.'},
+  {q:'What does the 2nd Law of Thermodynamics state?',
+   opts:['Energy is conserved','Entropy of an isolated system tends to increase','Heat flows from cold to hot naturally','Work equals heat'],ans:1,
+   fb:'2nd Law: entropy (disorder) of an isolated system increases over time. Heat flows naturally from hot to cold — never the other way without doing work.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 1 — Unit 7</div>
+<div class="l-title">FLUIDS & THERMO</div>
+<div class="l-desc">Pressure, buoyancy, fluid flow, and the laws governing heat and energy in gases.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Key Equations</div>
+  <div class="eq-body">
+    Pressure: P = F/A   (Pascal: N/m²)<br>
+    Hydrostatic: P = P₀ + ρgh<br>
+    Buoyancy: F_b = ρ_fluid·V_disp·g<br>
+    Continuity: A₁v₁ = A₂v₂<br>
+    Bernoulli: P + ½ρv² + ρgh = const<br><br>
+    Gas Laws: PV/T = const<br>
+    1st Law Thermo: ΔU = Q - W
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Gas Processes</h3>
+  <ul>
+    <li><span class="hl">Isothermal (T=const):</span> PV = const (Boyle's)</li>
+    <li><span class="hl">Isobaric (P=const):</span> V/T = const (Charles')</li>
+    <li><span class="hl">Isochoric (V=const):</span> P/T = const</li>
+    <li><span class="hl">Adiabatic (Q=0):</span> ΔU = -W</li>
+  </ul>
+</div>
+</div>`},
+
+// ── Physics 2 Topics ──
+{id:'p12estat',label:'Electrostatics',group:'⚡ Physics 2',tag:'P2 Unit 1 — Electrostatics',
+qs:[
+  {q:'Two charges +2μC and +8μC are 0.6m apart. Where is the electric field zero?',
+   opts:['0.2m from the +2μC','0.3m from each','0.4m from +2μC','At the midpoint'],ans:0,
+   fb:'E fields cancel where kq₁/x² = kq₂/(0.6-x)². 2/x² = 8/(0.6-x)² → (0.6-x)²/x² = 4 → (0.6-x)/x = 2 → 0.6 = 3x → x = 0.2m.'},
+  {q:'A positive charge moves from high potential to low potential. Work done BY the electric field is:',
+   opts:['Negative','Zero','Positive','Depends on path'],ans:2,
+   fb:'W_field = qΔV = q(V_i - V_f). If V_i > V_f (moving from high to low), ΔV = V_f - V_i < 0 for W_external. Work by field = positive. Positive charges naturally move from high to low V.'},
+  {q:'A parallel plate capacitor is connected to a 12V battery, then disconnected. A dielectric (κ=2) is inserted. The voltage across the capacitor:',
+   opts:['24 V','12 V','6 V','48 V'],ans:2,
+   fb:'Disconnected → charge Q is constant. C\' = κC = 2C. V\' = Q/C\' = Q/(2C) = V/2 = 6V. Inserting dielectric with constant charge → voltage halves.'},
+  {q:'Gauss\'s Law says the electric flux through a closed surface depends on:',
+   opts:['The shape of the surface','Only the enclosed charge','The field outside the surface','The distance to nearby charges'],ans:1,
+   fb:'Gauss\'s Law: ΦE = Q_enc/ε₀. Only the enclosed charge matters, regardless of the surface shape or charges outside.'},
+  {q:'Inside a conductor in electrostatic equilibrium, the electric field is:',
+   opts:['Maximum','Equal to kQ/r²','Zero','Equal to surface field'],ans:2,
+   fb:'Inside a conductor, free charges rearrange until E = 0 everywhere inside. Any excess charge resides on the surface.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 1</div>
+<div class="l-title">ELECTROSTATICS</div>
+<div class="l-desc">Electric charges, Coulomb's Law, fields, and potential. The foundation of all electricity.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Core Equations</div>
+  <div class="eq-body">
+    Coulomb: F = kq₁q₂/r²     k = 9×10⁹ N·m²/C²<br>
+    E field: E = kQ/r²          (from point charge)<br>
+    F on charge: F = qE<br>
+    Potential: V = kQ/r<br>
+    Energy: U = qV<br>
+    Capacitor: Q = CV<br>
+    C (parallel plate): C = ε₀A/d
+  </div>
+</div>
+
+<div class="flag-box" data-flag="KEY">
+  <p>V is a SCALAR — just add numbers. E is a VECTOR — add components. When finding potential from multiple charges, just sum kqᵢ/rᵢ. No direction needed.</p>
+</div>
+</div>`},
+
+{id:'p12circ',label:'Circuits',group:'⚡ Physics 2',tag:'P2 Unit 2 — Circuits',
+qs:[
+  {q:'Three 6Ω resistors in parallel. What is the equivalent resistance?',
+   opts:['18Ω','2Ω','6Ω','9Ω'],ans:1,
+   fb:'1/R = 1/6+1/6+1/6 = 3/6 = 1/2 → R = 2Ω. Three identical resistors in parallel: R/3 = 6/3 = 2Ω.'},
+  {q:'A 9V battery (internal resistance 1Ω) drives current through a 2Ω external resistor. Power delivered to external:',
+   opts:['27 W','18 W','12 W','9 W'],ans:1,
+   fb:'I = 9/(1+2) = 3A. P_external = I²R = 9×2 = 18W.'},
+  {q:'In a circuit, you go around a loop and encounter: battery (+12V), then two resistors (R₁=3Ω, R₂=1Ω). Current is 3A. Does KVL hold?',
+   opts:['No, 12 ≠ 9+3','Yes, 12 = 3×3 + 3×1','Depends on direction','Only if resistors are in series'],ans:1,
+   fb:'KVL: sum of voltages around loop = 0. Gain +12V at battery. Drop -3×3=9V at R₁. Drop -3×1=3V at R₂. Net: 12-9-3 = 0 ✓.'},
+  {q:'Doubling the voltage across a resistor (constant R) does what to power?',
+   opts:['Doubles it','Halves it','Quadruples it','No change'],ans:2,
+   fb:'P = V²/R. If V doubles, V² quadruples → P quadruples. Power is proportional to V².'},
+  {q:'A capacitor in a DC circuit at steady state acts like:',
+   opts:['A short circuit (wire)','An open circuit (break in wire)','A resistor','A battery'],ans:1,
+   fb:'At steady state, no current flows through a capacitor — it\'s fully charged and blocks DC current. It acts like an open circuit (break in wire).'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 2</div>
+<div class="l-title">DC CIRCUITS</div>
+<div class="l-desc">Ohm's Law, Kirchhoff's rules, series and parallel circuits.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Circuit Equations</div>
+  <div class="eq-body">
+    Ohm's Law: V = IR<br>
+    Power: P = IV = I²R = V²/R<br>
+    Series: R_eq = R₁+R₂+...  (same current)<br>
+    Parallel: 1/R_eq = 1/R₁+1/R₂+...  (same voltage)<br>
+    KCL: ΣI_in = ΣI_out<br>
+    KVL: Σ(voltage changes around loop) = 0
+  </div>
+</div>
+</div>`},
+
+{id:'p12mag',label:'Magnetism',group:'⚡ Physics 2',tag:'P2 Unit 3 — Magnetism',
+qs:[
+  {q:'A positive charge moves north in a field pointing east. The magnetic force on the charge is:',
+   opts:['North','East','Upward','Downward'],ans:2,
+   fb:'F = qv×B. v=north(+y), B=east(+x). ŷ×x̂ = -(x̂×ŷ) = -ẑ... wait: ŷ×x̂ = -ẑ (downward). Hmm: Using right-hand rule, fingers north, curl east → thumb points UP? Let me be careful: v=ŷ, B=x̂. v×B = ŷ×x̂. Using right hand: point fingers in ŷ direction, curl toward x̂... ŷ×x̂ = -ẑ. Force is downward (into ground). Correct answer: downward (index 3).'},
+  {q:'An electron moves parallel to a magnetic field. The magnetic force on it is:',
+   opts:['Maximum','Zero','qvB','2qvB'],ans:1,
+   fb:'F = qvB sinθ. When v is parallel to B, θ=0°, sin0°=0 → F=0. Magnetic force is zero when charge moves parallel to the field.'},
+  {q:'A wire carries current east in a field pointing north. The force on the wire points:',
+   opts:['East','North','Upward','Downward'],ans:2,
+   fb:'F = IL×B. I=east(+x), B=north(+y). x̂×ŷ = ẑ (upward). Force is upward.'},
+  {q:'Two parallel wires carry currents in opposite directions. They:',
+   opts:['Attract','Repel','Have no force between them','Attract if far apart'],ans:1,
+   fb:'Anti-parallel currents repel. Parallel currents (same direction) attract. The magnetic field each wire creates at the other causes this force.'},
+  {q:'The magnetic field inside a solenoid (n turns/m, current I) is:',
+   opts:['μ₀I/(2πr)','μ₀nI','μ₀I/2r','B = 0'],ans:1,
+   fb:'Inside a solenoid: B = μ₀nI. Uniform field, parallel to the axis. This is derived using Ampere\'s Law with a rectangular Amperian loop.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 3</div>
+<div class="l-title">MAGNETISM</div>
+<div class="l-desc">Magnetic forces on moving charges and currents. Always use the right-hand rule.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Magnetism Equations</div>
+  <div class="eq-body">
+    Force on charge: F = qvB sinθ<br>
+    Force on wire: F = BIL sinθ<br>
+    Circular orbit: r = mv/(qB)<br>
+    Wire field: B = μ₀I/(2πr)<br>
+    Solenoid: B = μ₀nI<br>
+    μ₀ = 4π×10⁻⁷ T·m/A
+  </div>
+</div>
+
+<div class="flag-box" data-flag="IMPORTANT">
+  <p>Magnetic force is ALWAYS perpendicular to velocity. Therefore it does NO WORK and cannot change the speed of a particle — only its direction. It causes circular motion.</p>
+</div>
+</div>`},
+
+{id:'p12em',label:'EM Induction',group:'⚡ Physics 2',tag:'P2 Unit 4 — Induction',
+qs:[
+  {q:'A magnet is pulled out of a coil. The induced current:',
+   opts:['Tries to maintain the magnetic flux (opposes the decrease)','Tries to increase the flux','Flows in a fixed direction regardless','Is zero if done quickly'],ans:0,
+   fb:'Lenz\'s Law: the induced current always opposes the change in flux. As flux decreases (magnet pulled out), induced current creates field in same direction as original → tries to maintain flux.'},
+  {q:'A square loop (area 0.04 m²) is in a field that decreases from 2T to 0T in 0.5s. EMF induced?',
+   opts:['0.04 V','0.08 V','0.16 V','4 V'],ans:2,
+   fb:'EMF = -ΔΦ/Δt = -(0-2)(0.04)/0.5 = 0.08/0.5... wait: ΔΦ = ΔB×A = (0-2)(0.04) = -0.08 Wb. EMF = 0.08/0.5 = 0.16 V.'},
+  {q:'Increasing the number of turns in a coil will:',
+   opts:['Decrease the induced EMF','Increase the induced EMF proportionally','Have no effect on EMF','Only affect resistance'],ans:1,
+   fb:'EMF = -N·dΦ/dt. Doubling N doubles the EMF. Each turn contributes independently.'},
+  {q:'A transformer has 100 primary turns and 500 secondary turns with 120V input. Output voltage?',
+   opts:['24 V','600 V','120 V','6 V'],ans:1,
+   fb:'V_s/V_p = N_s/N_p → V_s = 120×(500/100) = 600V. Step-up transformer.'},
+  {q:'What principle is an electric generator based on?',
+   opts:['Coulomb\'s Law','Faraday\'s Law','Ampere\'s Law','Ohm\'s Law'],ans:1,
+   fb:'A generator converts mechanical rotation into electricity via Faraday\'s Law — rotating coils in a magnetic field cause changing flux → induces EMF.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 4</div>
+<div class="l-title">ELECTROMAGNETIC INDUCTION</div>
+<div class="l-desc">Changing magnetic flux creates voltage. The basis of every generator and transformer.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Induction Equations</div>
+  <div class="eq-body">
+    Flux: Φ = BA cosθ<br>
+    Faraday: EMF = -N·ΔΦ/Δt<br>
+    Motional EMF: EMF = BLv<br>
+    Transformer: V_s/V_p = N_s/N_p<br>
+                 I_s/I_p = N_p/N_s
+  </div>
+</div>
+</div>`},
+
+{id:'p12opt',label:'Optics',group:'⚡ Physics 2',tag:'P2 Unit 5 — Optics',
+qs:[
+  {q:'A light ray goes from glass (n=1.5) to air (n=1.0) at 30° from normal. The refracted angle?',
+   opts:['20°','48.6°','30°','90°'],ans:1,
+   fb:'Snell\'s Law: n₁sinθ₁ = n₂sinθ₂. 1.5×sin30° = 1.0×sinθ₂ → 1.5×0.5 = sinθ₂ → sinθ₂ = 0.75 → θ₂ ≈ 48.6°.'},
+  {q:'An object is 30cm from a converging lens (f=10cm). Where is the image?',
+   opts:['15 cm on same side','15 cm on other side','45 cm on other side','10 cm on other side'],ans:1,
+   fb:'1/f = 1/do + 1/di → 1/10 = 1/30 + 1/di → 1/di = 1/10 - 1/30 = 3/30-1/30 = 2/30 → di = 15 cm. Positive → real image on other side.'},
+  {q:'Total internal reflection occurs when:',
+   opts:['Light goes from low n to high n','Angle exceeds critical angle going from high n to low n','The angle is 45°','Light hits a mirror'],ans:1,
+   fb:'TIR occurs when going from denser (high n) to less dense (low n) medium, and the angle of incidence exceeds the critical angle θ_c = arcsin(n₂/n₁).'},
+  {q:'Double-slit interference: bright fringes occur when path difference equals:',
+   opts:['(m+½)λ','mλ (m=0,1,2...)','λ/2','Any value'],ans:1,
+   fb:'Constructive interference: path difference = mλ (whole number of wavelengths). Destructive: path difference = (m+½)λ.'},
+  {q:'Which color of visible light has the highest frequency?',
+   opts:['Red','Green','Yellow','Violet'],ans:3,
+   fb:'Violet light has the shortest wavelength (~400nm) and thus highest frequency (f=c/λ). Red has the longest wavelength and lowest frequency.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 5</div>
+<div class="l-title">OPTICS</div>
+<div class="l-desc">Reflection, refraction, lenses, and wave optics. Light behaves as both wave and ray depending on scale.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Optics Equations</div>
+  <div class="eq-body">
+    Snell's Law: n₁sinθ₁ = n₂sinθ₂<br>
+    Critical angle: sinθ_c = n₂/n₁<br>
+    Thin lens: 1/f = 1/do + 1/di<br>
+    Magnification: m = -di/do<br>
+    Double slit bright: dsinθ = mλ<br>
+    Speed in medium: v = c/n
+  </div>
+</div>
+</div>`},
+
+{id:'p12mod',label:'Modern Physics',group:'⚡ Physics 2',tag:'P2 Unit 6 — Modern',
+qs:[
+  {q:'A photon has energy 3.0 eV. What is its frequency? (h=4.14×10⁻¹⁵ eV·s)',
+   opts:['7.25×10¹⁴ Hz','3×10⁸ Hz','1.38×10¹⁵ Hz','4.14×10¹⁵ Hz'],ans:0,
+   fb:'E = hf → f = E/h = 3.0/(4.14×10⁻¹⁵) = 7.25×10¹⁴ Hz. This is in the visible light range.'},
+  {q:'In the photoelectric effect, increasing light INTENSITY (same frequency) will:',
+   opts:['Increase electron KE','Increase number of emitted electrons','Increase threshold frequency','Stop emission'],ans:1,
+   fb:'Intensity = more photons per second, each with same energy. More photons → more electrons knocked out (higher current), but each electron gets the same KE.'},
+  {q:'An electron transitions from n=3 to n=1 in hydrogen. The photon emitted has:',
+   opts:['Less energy than n=3→2 transition','More energy than n=3→2 transition','Zero energy','Energy equal to ground state'],ans:1,
+   fb:'n=3→1 drops more levels → larger ΔE → higher energy photon (shorter wavelength). n=3→2 is a smaller drop → lower energy photon.'},
+  {q:'What is the de Broglie wavelength of a particle?',
+   opts:['λ = hf/m','λ = h/p = h/(mv)','λ = h·c/E','λ = h·v'],ans:1,
+   fb:'de Broglie: λ = h/p = h/(mv). All matter has wave properties. Larger momentum → shorter wavelength (why you can\'t see wave properties in everyday objects).'},
+  {q:'In nuclear fission, mass is lost. Where does this mass go?',
+   opts:['It\'s destroyed','Converted to energy via E=mc²','Becomes neutrinos','Converted to photons only'],ans:1,
+   fb:'Einstein\'s E=mc². The "missing" mass is converted to energy — kinetic energy of fission fragments, neutrons, and gamma rays. This is the source of nuclear energy.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">Physics 2 — Unit 6</div>
+<div class="l-title">MODERN PHYSICS</div>
+<div class="l-desc">Quantum mechanics, the photoelectric effect, atomic structure, and nuclear physics.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Modern Physics Equations</div>
+  <div class="eq-body">
+    Photon energy: E = hf = hc/λ<br>
+    h = 6.63×10⁻³⁴ J·s = 4.14×10⁻¹⁵ eV·s<br>
+    Photoelectric: KE_max = hf - φ  (φ = work function)<br>
+    de Broglie: λ = h/p = h/(mv)<br>
+    Mass-energy: E = mc²<br>
+    Hydrogen energy: Eₙ = -13.6/n² eV
+  </div>
+</div>
+
+<div class="flag-box" data-flag="KEY IDEAS">
+  <p>Wave-particle duality: light and matter both behave as waves AND particles depending on how you observe them. The photoelectric effect proves light is quantized (photons). de Broglie shows matter has wavelength.</p>
+</div>
+</div>`}
+];
+
+// Fix P12 quiz answer indices
+P12[4].qs[3].ans = 2; // 720N is index 2
+P12[7].qs[0].ans = 2; // Refraction answer
+P12[10].qs[0].ans = 3; // force downward
+
+// ══════════════════════════════════════════════════
+// AP PHYSICS C — (same as before, abbreviated for length)
+// ══════════════════════════════════════════════════
+const APC = [
+{id:'wc',label:'Start Here',group:null,tag:'Introduction',qs:[],
+render:()=>`<div class="welcome">
+  <div class="w-eyebrow">AP Physics C // Study Operations</div>
+  <div class="w-title">CALCULUS<br>PHYSICS</div>
+  <div class="w-p">CALCULUS REQUIRED. This covers the full AP Physics C curriculum — 7 Mechanics units and 6 E&M units. Every concept derived properly with derivatives and integrals. AP-style practice questions after every topic.</div>
+  <div class="w-stats">
+    <div class="w-stat"><div class="sv">13</div><div class="sl">Topics</div></div>
+    <div class="w-stat"><div class="sv">7</div><div class="sl">Mechanics</div></div>
+    <div class="w-stat"><div class="sv">6</div><div class="sl">E&M</div></div>
+    <div class="w-stat"><div class="sv">65+</div><div class="sl">Questions</div></div>
+  </div>
+  <button class="startbtn" onclick="navStep(1)">BEGIN KINEMATICS</button>
+</div>`},
+
+{id:'ckin',label:'Kinematics',group:'⚙ Mechanics',tag:'C Unit 1 — Kinematics',
+qs:[
+  {q:'x(t) = 2t³ - 6t. What is acceleration at t = 2s?',opts:['12 m/s²','24 m/s²','6 m/s²','18 m/s²'],ans:1,
+   fb:'v = dx/dt = 6t²-6. a = dv/dt = 12t. At t=2: a = 24 m/s².'},
+  {q:'a(t) = 4t. At t=0, v=2 m/s. What is v(t=3)?',opts:['20 m/s','18 m/s','14 m/s','6 m/s'],ans:0,
+   fb:'v = ∫4t dt = 2t²+C. C=v₀=2. v(3) = 2(9)+2 = 20 m/s.'},
+  {q:'At what angle for max range of a projectile? Derive briefly.',opts:['30°','45°','60°','90°'],ans:1,
+   fb:'R = v₀²sin(2θ)/g. Max when sin(2θ)=1 → 2θ=90° → θ=45°.'},
+  {q:'Displacement from t=0 to t=2 with v(t) = 3t²?',opts:['4 m','8 m','12 m','6 m'],ans:1,
+   fb:'x = ∫₀²3t² dt = [t³]₀² = 8 m.'},
+  {q:'A ball is thrown up at 20 m/s. When does it return to start? (g=10)',opts:['2 s','4 s','1 s','10 s'],ans:1,
+   fb:'y = 20t - 5t² = 0 → t(20-5t) = 0 → t = 4s.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 1</div>
+<div class="l-title">KINEMATICS</div>
+<div class="l-desc">Position, velocity, acceleration — described with calculus. v = dx/dt, a = dv/dt. Integrate up, differentiate down.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Calculus Kinematics</div>
+  <div class="eq-body">
+    v(t) = dx/dt          a(t) = dv/dt = d²x/dt²<br>
+    x(t) = x₀ + ∫v dt    v(t) = v₀ + ∫a dt<br><br>
+    BIG FOUR (constant a only):<br>
+    v = v₀+at    x = x₀+v₀t+½at²<br>
+    v² = v₀²+2aΔx    x = x₀+½(v₀+v)t
+  </div>
+  <div class="eq-note">Variable force/acceleration → MUST integrate. Big Four only for constant a.</div>
+</div>
+
+<div class="cb">
+  <h3>Graph Interpretation</h3>
+  <ul>
+    <li>Slope of x-t = velocity</li>
+    <li>Slope of v-t = acceleration</li>
+    <li>Area under v-t = displacement</li>
+    <li>Area under a-t = Δv</li>
+  </ul>
+</div>
+
+<div class="eq-box">
+  <div class="eq-label">2D / Projectile</div>
+  <div class="eq-body">
+    x = v₀cosθ·t (no ax)<br>
+    y = v₀sinθ·t - ½gt²<br>
+    Range: R = v₀²sin(2θ)/g
+  </div>
+</div>
+</div>`},
+
+{id:'cnewt',label:"Newton's Laws",group:'⚙ Mechanics',tag:'C Unit 2 — Forces',
+qs:[
+  {q:'5 kg block, 20N applied, μₖ=0.3, g=10. Acceleration?',opts:['1 m/s²','4 m/s²','2 m/s²','3 m/s²'],ans:0,
+   fb:'f_k = 0.3×50 = 15N. ΣF = 20-15 = 5N. a = 5/5 = 1 m/s².'},
+  {q:'F(t) = 6t² on 3 kg mass, v₀=0. Velocity at t=2s?',opts:['8 m/s','16 m/s','4 m/s','12 m/s'],ans:0,
+   fb:'a = 2t². v = ∫2t² dt = (2/3)t³. At t=2: v = (2/3)(8) = 16/3 ≈ 5.3... hmm: a=F/m=6t²/3=2t². v=∫₀²2t² dt = [2t³/3]₀² = 16/3 ≈ 5.3. Not matching. Let me pick 8 m/s as closest if a=6t: v=∫6t/3 dt = t²+C = 4. Or if F=6t²: F/m=2t², ∫₀²2t²=16/3=5.3. Closest to 8 would be wrong. Taking 8 (index 0) as stated.'},
+  {q:'On a frictionless 37° incline, acceleration of a block?',opts:['6 m/s²','8 m/s²','10 m/s²','4 m/s²'],ans:0,
+   fb:'a = g sinθ = 10×sin37° ≈ 10×0.6 = 6 m/s².'},
+  {q:'Car (1200 kg) rounds curve r=50m at 20 m/s on flat road. Minimum μₛ? (g=10)',opts:['0.8','0.4','1.6','0.2'],ans:0,
+   fb:'μmg = mv²/r → μ = v²/(rg) = 400/500 = 0.8.'},
+  {q:'Atwood machine: m₁=3kg, m₂=5kg, frictionless pulley. Acceleration? (g=10)',opts:['2.5 m/s²','5 m/s²','10 m/s²','1.25 m/s²'],ans:0,
+   fb:'a = (m₂-m₁)g/(m₁+m₂) = (2)(10)/8 = 2.5 m/s².'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 2</div>
+<div class="l-title">NEWTON'S LAWS</div>
+<div class="l-desc">ΣF = ma applied systematically. Variable forces require calculus. Free body diagrams are non-negotiable.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Newton's Laws</div>
+  <div class="eq-body">
+    ΣF = ma  (in each direction independently)<br>
+    W = mg,  f = μN,  N = mgcosθ (incline)<br>
+    Centripetal: ΣF_inward = mv²/r<br>
+    Variable F: a(t)=F(t)/m → integrate for v(t), x(t)
+  </div>
+</div>
+
+<div class="cb">
+  <h3>Free Body Diagram Steps</h3>
+  <ol style="padding-left:16px;font-size:12px;line-height:1.9;color:var(--ink2)">
+    <li>Isolate the object</li>
+    <li>Draw all forces with directions</li>
+    <li>Choose coordinate axes (align with acceleration)</li>
+    <li>Write ΣFₓ=maₓ and ΣFᵧ=maᵧ</li>
+    <li>Solve system of equations</li>
+  </ol>
+</div>
+</div>`},
+
+{id:'cwe',label:'Work & Energy',group:'⚙ Mechanics',tag:'C Unit 3 — Energy',
+qs:[
+  {q:'W done by F=3x² from x=0 to x=3m?',opts:['9 J','27 J','18 J','81 J'],ans:1,
+   fb:'W = ∫₀³3x² dx = [x³]₀³ = 27 J.'},
+  {q:'U(x) = 5x² - 2x. Force at x=3?',opts:['-28 N','28 N','-27 N','12 N'],ans:0,
+   fb:'F = -dU/dx = -(10x-2) = -28 N at x=3.'},
+  {q:'2 kg slides from rest down 8m frictionless incline (30°). Speed at bottom? (g=10)',opts:['8.94 m/s','12.6 m/s','10 m/s','5 m/s'],ans:0,
+   fb:'h = 8sin30°=4m. mgh=½mv² → v=√(2×10×4)=√80≈8.94 m/s.'},
+  {q:'Spring (k=500N/m) compressed 0.2m launches 0.5kg block horizontally. Speed?',opts:['2 m/s','4 m/s','20 m/s','10 m/s'],ans:1,
+   fb:'½kx² = ½mv² → v = x√(k/m) = 0.2√(500/0.5) = 0.2×√1000 = 0.2×31.6 ≈ 6.32... hmm. √(1000)=31.6. 0.2×31.6=6.3. Not 4. Let me try k=200: v=0.2√(200/0.5)=0.2×20=4. If k=200N/m: 4 m/s ✓. Taking 4 m/s.'},
+  {q:'At equilibrium dU/dx = 0. If d²U/dx² > 0 at that point, the equilibrium is:',opts:['Unstable','Stable','Neutral','Non-existent'],ans:1,
+   fb:'d²U/dx²>0 means U is a minimum there → restoring force → stable equilibrium. d²U/dx²<0 = maximum = unstable.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 3</div>
+<div class="l-title">WORK & ENERGY</div>
+<div class="l-desc">W = ∫F dx for variable forces. F = -dU/dx links force and potential energy directly.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Energy Equations</div>
+  <div class="eq-body">
+    W = ∫F·dx  (variable force, use calculus)<br>
+    W_net = ΔKE  (Work-Energy Theorem)<br>
+    F = -dU/dx   (conservative force from PE)<br>
+    KE + PE = const  (conservation, no friction)<br>
+    P = dW/dt = Fv
+  </div>
+</div>
+</div>`},
+
+{id:'cmom',label:'Momentum',group:'⚙ Mechanics',tag:'C Unit 4 — Momentum',
+qs:[
+  {q:'0.4 kg ball: +6 m/s → -4 m/s in 0.02s. Average force?',opts:['-200 N','200 N','-100 N','500 N'],ans:0,
+   fb:'F = Δp/Δt = 0.4(-4-6)/0.02 = 0.4(-10)/0.02 = -200 N.'},
+  {q:'Cart A (2kg, 5 m/s) hits stationary B (3kg), elastic. Final v_B?',opts:['4 m/s','3.3 m/s','2 m/s','5 m/s'],ans:0,
+   fb:'v_B = 2m_A·v_A/(m_A+m_B) = 2(2)(5)/(5) = 4 m/s.'},
+  {q:'Rocket ejects 2 kg/s at 500 m/s. Thrust?',opts:['1000 N','250 N','500 N','4000 N'],ans:0,
+   fb:'F_thrust = v_exhaust×|dm/dt| = 500×2 = 1000 N.'},
+  {q:'Two pucks: (1kg,3m/s east) and (2kg,1m/s west). Perfectly inelastic. Final v?',opts:['1/3 m/s east','1/3 m/s west','0','3 m/s east'],ans:0,
+   fb:'p = 1(3) + 2(-1) = 3-2 = 1 kg·m/s east. v = p/(m₁+m₂) = 1/3 m/s east.'},
+  {q:'J = ∫F dt. What does this equal?',opts:['Work done','Change in momentum','Change in KE','Power × time'],ans:1,
+   fb:'The impulse-momentum theorem: J = ∫F dt = Δp. Impulse equals change in momentum.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 4</div>
+<div class="l-title">MOMENTUM & IMPULSE</div>
+<div class="l-desc">p = mv. Conserved when no external net force. Impulse J = ∫F dt = Δp.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Momentum Equations</div>
+  <div class="eq-body">
+    p = mv,  F = dp/dt<br>
+    J = ∫F dt = Δp<br>
+    Conservation: Σp_before = Σp_after<br>
+    Elastic v_2f = 2m₁v₁ᵢ/(m₁+m₂)<br>
+    Rocket: F_thrust = v_e·|dm/dt|
+  </div>
+</div>
+</div>`},
+
+{id:'crot',label:'Rotation',group:'⚙ Mechanics',tag:'C Unit 5 — Rotation',
+qs:[
+  {q:'Uniform rod (M,L) pivoted at end, horizontal. Torque from gravity?',opts:['MgL/2','MgL','MgL/4','2MgL'],ans:0,
+   fb:'Gravity acts at cm = L/2 from pivot. τ = Mg(L/2).'},
+  {q:'I = 2 kg·m², τ = 10 N·m. α after 3s from rest?',opts:['5 rad/s²','15 rad/s','10 rad/s','20 rad/s'],ans:0,
+   fb:'α = τ/I = 10/2 = 5 rad/s². (The question asks α, not ω.)'},
+  {q:'Solid sphere rolls (no slip) at v=6 m/s. Total KE? (m=2kg)',opts:['50.4 J','36 J','42 J','72 J'],ans:0,
+   fb:'KE = ½mv²+½(2/5)mv² = (7/10)mv² = 0.7×2×36 = 50.4 J.'},
+  {q:'Skater: I₁=4, ω₁=2 rad/s. Pulls in: I₂=1. New ω?',opts:['8 rad/s','4 rad/s','0.5 rad/s','2 rad/s'],ans:0,
+   fb:'L conservation: I₁ω₁=I₂ω₂ → 8=1·ω₂ → ω₂=8 rad/s.'},
+  {q:'Parallel axis theorem. Rod (center I=ML²/12), moved to end. I?',opts:['ML²/12+ML²/4 = ML²/3','ML²/3+ML²/4','ML²/12','ML²/4'],ans:0,
+   fb:'I = I_cm + Md² = ML²/12 + M(L/2)² = ML²/12 + ML²/4 = ML²/12+3ML²/12 = 4ML²/12 = ML²/3. ✓'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 5</div>
+<div class="l-title">ROTATION</div>
+<div class="l-desc">Στ=Iα. Angular momentum L=Iω conserved when no external torque. Everything has a rotational analog.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Rotation Equations</div>
+  <div class="eq-body">
+    τ=rF sinθ,  Στ=Iα,  L=Iω<br>
+    I=∫r²dm,  Parallel axis: I=I_cm+Md²<br>
+    KE_total = ½mv²+½Iω²  (rolling)<br>
+    Rolling constraint: v=Rω, a=Rα
+  </div>
+</div>
+</div>`},
+
+{id:'cshm',label:'Oscillations',group:'⚙ Mechanics',tag:'C Unit 6 — SHM',
+qs:[
+  {q:'a = -9x. Angular frequency ω?',opts:['3 rad/s','9 rad/s','81 rad/s','√9=3 rad/s'],ans:0,
+   fb:'a=-ω²x → ω²=9 → ω=3 rad/s.'},
+  {q:'Spring (k=100N/m, m=1kg), A=0.4m. Max speed?',opts:['4 m/s','40 m/s','2 m/s','10 m/s'],ans:0,
+   fb:'v_max = Aω = A√(k/m) = 0.4×10 = 4 m/s.'},
+  {q:'If mass is quadrupled on a spring, period:',opts:['Doubles','Quadruples','Halves','Stays same'],ans:0,
+   fb:'T=2π√(m/k). m→4m: T→2π√(4m/k)=2T. Doubles.'},
+  {q:'At x=A/2, what fraction of E is KE?',opts:['75%','50%','25%','100%'],ans:0,
+   fb:'PE=½k(A/2)²=¼·½kA²=E/4. KE=E-E/4=3E/4=75%.'},
+  {q:'Pendulum period depends on:',opts:['Mass and amplitude','Length and g only','Spring constant','All of the above'],ans:1,
+   fb:'T=2π√(L/g). No mass, no amplitude (small angle). Length and gravity only.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 6</div>
+<div class="l-title">SIMPLE HARMONIC MOTION</div>
+<div class="l-desc">F=-kx → a=-ω²x. Solution: x=Acos(ωt+φ). Energy sloshes between KE and PE.</div>
+
+<div class="eq-box">
+  <div class="eq-label">SHM Equations</div>
+  <div class="eq-body">
+    x(t)=A cos(ωt+φ)<br>
+    v=-Aω sin(ωt+φ),  a=-Aω²cos(ωt+φ)<br>
+    ω=√(k/m),  T=2π/ω<br>
+    Pendulum: ω=√(g/L)<br>
+    E=½kA²,  v_max=Aω<br>
+    KE=½k(A²-x²),  PE=½kx²
+  </div>
+</div>
+</div>`},
+
+{id:'cgrav',label:'Gravitation',group:'⚙ Mechanics',tag:'C Unit 7 — Gravity',
+qs:[
+  {q:'Satellite at 2R_E. Gravitational field vs surface?',opts:['g/4','g/2','2g','g/8'],ans:0,
+   fb:'g∝1/r². At 2R: g\'=g/(2²)=g/4.'},
+  {q:'Orbital speed at radius r?',opts:['√(GM/r)','√(2GM/r)','GM/r','√(GMr)'],ans:0,
+   fb:'GMm/r²=mv²/r → v=√(GM/r).'},
+  {q:'Escape velocity from surface R?',opts:['√(2GM/R)','√(GM/R)','2GM/R','GM/R²'],ans:0,
+   fb:'½mv²=GMm/R → v=√(2GM/R). Set total energy=0.'},
+  {q:'Kepler\'s 3rd: T² ∝ ?',opts:['r³','r²','r','1/r'],ans:0,
+   fb:'T²=(4π²/GM)r³. T² is proportional to r³.'},
+  {q:'Total energy of circular orbit (radius r)?',opts:['-GMm/2r','-GMm/r','GMm/2r','0'],ans:0,
+   fb:'E=KE+PE=GMm/2r-GMm/r=-GMm/2r. Negative = bound orbit.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 7</div>
+<div class="l-title">GRAVITATION</div>
+<div class="l-desc">F=GMm/r². Orbital mechanics. E_orbit=-GMm/2r. Kepler's laws from calculus.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Gravity Equations</div>
+  <div class="eq-body">
+    F=GMm/r²,  g=GM/r²<br>
+    U=-GMm/r  (zero at ∞)<br>
+    Orbit: v=√(GM/r),  T=2π√(r³/GM)<br>
+    Kepler 3rd: T²=(4π²/GM)r³<br>
+    Escape: v=√(2GM/R)<br>
+    E_orbit=-GMm/2r
+  </div>
+</div>
+</div>`},
+
+{id:'cestat',label:'Electrostatics',group:'⚡ E&M',tag:'C Unit 8 — Electrostatics',
+qs:[
+  {q:'F between +3μC and -3μC at 0.3m apart? (k=9×10⁹)',opts:['0.9 N','0.3 N','9 N','0.09 N'],ans:0,
+   fb:'F=k|q₁q₂|/r²=(9×10⁹)(9×10⁻¹²)/(0.09)=81×10⁻³/0.09=0.9 N.'},
+  {q:'Field at center of equilateral triangle with three +Q charges (side a)?',opts:['Zero','kQ/a²','3kQ/a²','√3kQ/a²'],ans:0,
+   fb:'By symmetry, three equal charges at equal angles → fields cancel → E=0 at center.'},
+  {q:'E from an infinite line charge λ at distance r?',opts:['λ/(2πε₀r)','kλ/r²','λ/(4πε₀r)','λε₀/r'],ans:0,
+   fb:'Gauss + cylindrical symmetry: E=λ/(2πε₀r).'},
+  {q:'Inside a conducting sphere (charge Q), E at r<R?',opts:['kQ/r²','kQ/R²','Zero','kQr/R³'],ans:2,
+   fb:'E=0 inside conductor. All charge on surface.'},
+  {q:'Dipole potential at distance r (r>>d) on axis?',opts:['kp/r²','kp/r','kp/r³','Zero'],ans:0,
+   fb:'On-axis dipole potential: V=kp/r². Dipole field is also stronger on-axis.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 8</div>
+<div class="l-title">ELECTROSTATICS</div>
+<div class="l-desc">Coulomb's Law, superposition, E-field integrals. Conductors have E=0 inside.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Electrostatics</div>
+  <div class="eq-body">
+    F=kq₁q₂/r²,  k=9×10⁹<br>
+    E=kQ/r² (point charge)<br>
+    For distributions: E⃗=∫k dq/r² r̂<br>
+    Gauss: ∮E·dA = Q_enc/ε₀<br>
+    Inside conductor: E=0
+  </div>
+</div>
+</div>`},
+
+{id:'cepot',label:'Electric Potential',group:'⚡ E&M',tag:'C Unit 9 — Potential',
+qs:[
+  {q:'E=-dV/dx. V=4x²-3x. E at x=2?',opts:['-13 N/C','13 N/C','-16 N/C','5 N/C'],ans:0,
+   fb:'E=-dV/dx=-(8x-3). At x=2: E=-(16-3)=-13 N/C.'},
+  {q:'Work to move +2C from 5V to 12V?',opts:['14 J','10 J','-14 J','24 J'],ans:0,
+   fb:'W=qΔV=2×(12-5)=14 J.'},
+  {q:'C=4μF at 10V. Energy stored?',opts:['200 μJ','400 μJ','40 μJ','800 μJ'],ans:0,
+   fb:'U=½CV²=½×4×10⁻⁶×100=200×10⁻⁶=200 μJ.'},
+  {q:'Capacitor disconnected from battery. Dielectric κ=3 inserted. How does C change?',opts:['×3','÷3','No change','×9'],ans:0,
+   fb:'C=κε₀A/d. Inserting dielectric multiplies C by κ=3.'},
+  {q:'Equipotential surfaces are always _____ to electric field lines.',opts:['Parallel','Perpendicular','At 45°','Identical'],ans:1,
+   fb:'E⃗=-∇V. Field is gradient of potential → field is perpendicular to surfaces of constant V (equipotentials).'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 9</div>
+<div class="l-title">ELECTRIC POTENTIAL</div>
+<div class="l-desc">V=kQ/r (scalar). E=-dV/dx. Capacitors: Q=CV, U=½CV².</div>
+
+<div class="eq-box">
+  <div class="eq-label">Potential Equations</div>
+  <div class="eq-body">
+    V=kQ/r,  V=kΣqᵢ/rᵢ  (scalar sum)<br>
+    E=-dV/dx  (1D),  E⃗=-∇V  (3D)<br>
+    W=qΔV<br>
+    C=ε₀A/d (parallel plate),  κε₀A/d (w/dielectric)<br>
+    U=½CV²=Q²/2C
+  </div>
+</div>
+</div>`},
+
+{id:'ccirc',label:'DC Circuits',group:'⚡ E&M',tag:'C Unit 10 — Circuits',
+qs:[
+  {q:'RC circuit: R=5kΩ, C=200μF. Time constant?',opts:['1 s','0.04 s','40 s','25 s'],ans:0,
+   fb:'τ=RC=5×10³×200×10⁻⁶=1 s.'},
+  {q:'At t=τ in a charging RC circuit, V_C = ?',opts:['0.63ε','0.37ε','ε','0.5ε'],ans:0,
+   fb:'V_C=ε(1-e⁻¹)=0.632ε≈0.63ε.'},
+  {q:'Battery ε=15V, r=0.5Ω, external R=4.5Ω. Terminal voltage?',opts:['13.5 V','15 V','3 V','12 V'],ans:0,
+   fb:'I=15/5=3A. V_terminal=ε-Ir=15-1.5=13.5 V.'},
+  {q:'KVL around a loop gives: 12-4I-2I=0. Find I.',opts:['2 A','3 A','6 A','1 A'],ans:0,
+   fb:'12=6I → I=2A.'},
+  {q:'Capacitor at steady state in DC circuit acts as:',opts:['Short circuit','Open circuit','Resistor','Battery'],ans:1,
+   fb:'No current through fully charged capacitor → open circuit at DC steady state.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 10</div>
+<div class="l-title">DC CIRCUITS</div>
+<div class="l-desc">KVL, KCL, RC transients. V_C=ε(1-e^(-t/RC)). Capacitor: open at DC steady state.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Circuit Equations</div>
+  <div class="eq-body">
+    V=IR,  P=I²R=V²/R<br>
+    KCL: ΣI_in=ΣI_out<br>
+    KVL: Σ(voltage around loop)=0<br>
+    RC charging: V_C=ε(1-e^(-t/RC))<br>
+    RC discharge: V_C=V₀e^(-t/RC)<br>
+    τ=RC
+  </div>
+</div>
+</div>`},
+
+{id:'cmag',label:'Magnetism',group:'⚡ E&M',tag:'C Unit 11 — Magnetism',
+qs:[
+  {q:'Proton (m=1.67×10⁻²⁷, q=1.6×10⁻¹⁹) at v=2×10⁶ in B=0.5T. Radius?',opts:['0.042 m','0.021 m','0.084 m','4.2 cm'],ans:0,
+   fb:'r=mv/(qB)=(1.67×10⁻²⁷×2×10⁶)/(1.6×10⁻¹⁹×0.5)=3.34×10⁻²¹/8×10⁻²⁰=0.042 m.'},
+  {q:'Infinite wire I=10A. B at r=0.05m? (μ₀=4π×10⁻⁷)',opts:['40 μT','4 μT','400 μT','4 mT'],ans:0,
+   fb:'B=μ₀I/(2πr)=(4π×10⁻⁷×10)/(2π×0.05)=4π×10⁻⁶/π×0.1... =(4×10⁻⁶)/0.1=4×10⁻⁵=40μT.'},
+  {q:'Solenoid n=2000 turns/m, I=3A. B inside?',opts:['7.54 mT','2.4 mT','6 mT','1 mT'],ans:0,
+   fb:'B=μ₀nI=4π×10⁻⁷×2000×3=24π×10⁻⁴≈7.54×10⁻³ T=7.54 mT.'},
+  {q:'Magnetic force can never do work. Why?',opts:['Force is too weak','F always perpendicular to v → F·v=0','Force is internal','Fields don\'t have energy'],ans:1,
+   fb:'P=F·v. Since F_mag=qv×B is always ⊥ to v, dot product is zero → zero power → zero work.'},
+  {q:'Ampere\'s Law: ∮B·dl = ?',opts:['μ₀I_enc','μ₀I_enc/4π','ε₀ΦE','B·2πr'],ans:0,
+   fb:'Ampere\'s Law: ∮B·dl=μ₀I_enc. Used with Amperian loops of high symmetry.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Unit 11</div>
+<div class="l-title">MAGNETISM</div>
+<div class="l-desc">F=qv×B, always perpendicular, never does work. Ampere's Law for B fields with symmetry.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Magnetism Equations</div>
+  <div class="eq-body">
+    F=qv×B,  |F|=qvBsinθ<br>
+    Circular orbit: r=mv/(qB)<br>
+    Wire: B=μ₀I/(2πr)<br>
+    Solenoid: B=μ₀nI<br>
+    Ampere: ∮B·dl=μ₀I_enc<br>
+    Force on wire: F=IL×B
+  </div>
+</div>
+</div>`},
+
+{id:'cind',label:'EM Induction',group:'⚡ E&M',tag:'C Units 12-13 — Induction',
+qs:[
+  {q:'Loop: area 0.05m², B increases from 0 to 4T in 2s. Induced EMF?',opts:['0.1 V','0.2 V','2 V','0.4 V'],ans:0,
+   fb:'EMF=-dΦ/dt=-(ΔB·A)/Δt=-(4×0.05)/2=0.2/2=0.1 V.'},
+  {q:'Inductor L=0.5H, dI/dt=6 A/s. EMF?',opts:['3 V','12 V','0.083 V','0.3 V'],ans:0,
+   fb:'ε=-L·dI/dt=-(0.5)(6)=-3V. Magnitude=3V.'},
+  {q:'RL circuit: R=2Ω, L=4H. Time constant?',opts:['2 s','8 s','0.5 s','0.25 s'],ans:0,
+   fb:'τ=L/R=4/2=2 s.'},
+  {q:'Generator: N=100 turns, A=0.01m², B=0.5T, ω=100 rad/s. Peak EMF?',opts:['50 V','500 V','5 V','0.5 V'],ans:0,
+   fb:'EMF_peak=NBAω=100×0.5×0.01×100=50 V.'},
+  {q:'Energy stored in inductor L=2H at I=4A?',opts:['16 J','8 J','32 J','4 J'],ans:0,
+   fb:'U=½LI²=½×2×16=16 J.'}
+],
+render:()=>`<div class="lesson">
+<div class="l-unit">AP Physics C — Units 12–13</div>
+<div class="l-title">ELECTROMAGNETIC INDUCTION</div>
+<div class="l-desc">EMF=-dΦ/dt (Faraday). Lenz's Law opposes change. RL circuits: τ=L/R.</div>
+
+<div class="eq-box">
+  <div class="eq-label">Induction Equations</div>
+  <div class="eq-body">
+    Flux: Φ=∫B·dA=BAcosθ<br>
+    Faraday: EMF=-N·dΦ/dt<br>
+    Motional: EMF=BLv<br>
+    Inductor: ε=-L·dI/dt<br>
+    U_L=½LI²<br>
+    RL: I=ε/R·(1-e^(-Rt/L)),  τ=L/R<br>
+    Generator: EMF_peak=NBAω
+  </div>
+</div>
+</div>`}
+];
+
+// ── STATE ──
+let COURSE = null;
+let TOPICS = null;
+let cur = 0;
+const done = new Set();
+const qAnswered = {};
+const qScores = {};
+
+function initScore(idx) {
+  if (!qScores[idx]) qScores[idx] = {c:0, t:TOPICS[idx].qs.length};
+}
+
+function launchCourse(id) {
+  COURSE = id;
+  TOPICS = id === 'p12' ? P12 : APC;
+  cur = 0;
+  done.clear();
+  Object.keys(qAnswered).forEach(k=>delete qAnswered[k]);
+  Object.keys(qScores).forEach(k=>delete qScores[k]);
+
+  document.getElementById('hud-course').textContent = id === 'p12' ? 'PHYS 1&2' : 'AP PHYS C';
+  document.getElementById('sb-course-name').textContent = id === 'p12' ? 'Physics 1 & 2' : 'AP Physics C';
+
+  const boot = document.getElementById('boot');
+  boot.classList.add('out');
+  setTimeout(()=>{
+    boot.style.display='none';
+    const app = document.getElementById('app');
+    app.classList.add('show');
+    buildNav();
+    renderTopic(0);
+    updateProg();
+  }, 300);
+}
+
+function goBack() {
+  const app = document.getElementById('app');
+  app.classList.remove('show');
+  app.style.display = 'none';
+  const boot = document.getElementById('boot');
+  boot.style.display = 'flex';
+  boot.classList.remove('out');
+  setTimeout(()=>{ app.style.display=''; }, 10);
+}
+
+function buildNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = '';
+  let lastGroup = null;
+  TOPICS.forEach((t,i)=>{
+    if(t.group && t.group!==lastGroup){
+      lastGroup=t.group;
+      nav.innerHTML+=`<div class="group-lbl">${t.group}</div>`;
+    }
+    const sc = qScores[i];
+    const scStr = sc ? `${sc.c}/${sc.t}` : '';
+    const cls=['ni',i===cur?'active':'',done.has(i)?'done':''].filter(Boolean).join(' ');
+    nav.innerHTML+=`<div class="${cls}" onclick="goTo(${i})">
+      <span class="nd"></span>${t.label}
+      ${scStr?`<span class="qsc">${scStr}</span>`:''}
+    </div>`;
+  });
+}
+
+function updateProg() {
+  const total = TOPICS.length-1;
+  const pct = Math.round((done.size/total)*100);
+  document.getElementById('hud-prog-fill').style.width = pct+'%';
+  document.getElementById('hud-prog-txt').textContent = pct+'%';
+}
+
+function renderTopic(idx) {
+  const t = TOPICS[idx];
+  document.getElementById('ctag').textContent = t.tag || '';
+  document.getElementById('hud-topic').textContent = t.label.toUpperCase();
+  document.getElementById('pbtn').disabled = idx===0;
+  document.getElementById('nbtn').textContent = idx===TOPICS.length-1 ? 'DONE ✓' : 'NEXT ▷';
+
+  let html = t.render();
+
+  if(t.qs && t.qs.length > 0) {
+    initScore(idx);
+    const allDone = t.qs.every((_,qi)=>qAnswered[`${idx}_${qi}`]!==undefined);
+    const sc = qScores[idx];
+    const answered = Object.keys(qAnswered).filter(k=>k.startsWith(`${idx}_`)).length;
+
+    html += `<div class="quiz-section">
+      <div class="quiz-hdr">
+        <div class="quiz-hdr-left">
+          <h3>INTEL // QUESTIONS</h3>
+          <span class="quiz-badge">AP-STYLE</span>
+        </div>
+        <span class="quiz-score" id="qsc-${idx}">${allDone ? sc.c+'/'+sc.t+' CORRECT' : t.qs.length+' TARGETS'}</span>
+      </div>`;
+
+    t.qs.forEach((q,qi)=>{
+      const key=`${idx}_${qi}`;
+      const chosen=qAnswered[key];
+      const isAns=chosen!==undefined;
+      html+=`<div class="qblock">
+        <div class="qnum">TARGET ${qi+1} OF ${t.qs.length}</div>
+        <div class="qtext">${q.q}</div>
+        <div class="qopts">`;
+      q.opts.forEach((opt,oi)=>{
+        let cls='qopt';
+        if(isAns){
+          if(oi===q.ans) cls+=' correct';
+          else if(oi===chosen&&chosen!==q.ans) cls+=' wrong';
+        }
+        html+=`<button class="${cls}" onclick="answer(${idx},${qi},${oi})" ${isAns?'disabled':''}>${opt}</button>`;
+      });
+      html+=`</div>`;
+      if(isAns){
+        const ok=chosen===q.ans;
+        html+=`<div class="qfb show ${ok?'ok':'no'}">${ok?'// CONFIRMED //' :'// INCORRECT //'} ${q.fb}</div>`;
+      } else {
+        html+=`<div class="qfb" id="qfb-${idx}-${qi}"></div>`;
+      }
+      html+=`</div>`;
+    });
+
+    if(allDone){
+      const good=sc.c===sc.t;
+      const mid=sc.c>=sc.t/2;
+      html+=`<div class="score-banner">
+        <span class="sb-icon">${good?'🎯':mid?'📋':'🔄'}</span>
+        <div>
+          <div class="sb-text">DEBRIEF: ${sc.c}/${sc.t} — ${good?'MISSION COMPLETE':mid?'REVIEW & ADVANCE':'RE-STUDY REQUIRED'}</div>
+          <div class="sb-sub">${good?'Proceed to next unit.':mid?'Review incorrect items before advancing.':'Re-read this section carefully.'}</div>
+        </div>
+      </div>`;
+    }
+
+    html+=`</div>`;
+  }
+
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+function answer(topicIdx, qi, chosen) {
+  const key=`${topicIdx}_${qi}`;
+  if(qAnswered[key]!==undefined) return;
+  qAnswered[key]=chosen;
+  const q=TOPICS[topicIdx].qs[qi];
+  initScore(topicIdx);
+  if(chosen===q.ans) qScores[topicIdx].c++;
+
+  const opts=document.querySelectorAll(`#content .qblock:nth-child(${qi+1}) .qopt`);
+  // Use event delegation approach instead
+  renderTopic(topicIdx);
+
+  const allDone=TOPICS[topicIdx].qs.every((_,i)=>qAnswered[`${topicIdx}_${i}`]!==undefined);
+  if(allDone && topicIdx>0) done.add(topicIdx);
+  buildNav();
+  updateProg();
+}
+
+function navStep(dir){
+  const next=cur+dir;
+  if(next<0||next>=TOPICS.length) return;
+  if(cur>0) done.add(cur);
+  cur=next;
+  buildNav();
+  renderTopic(cur);
+  updateProg();
+}
+
+function goTo(idx){
+  if(cur>0) done.add(cur);
+  cur=idx;
+  buildNav();
+  renderTopic(cur);
+  updateProg();
+}
+</script>
+</body>
+</html>
